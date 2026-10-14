@@ -1,1 +1,4 @@
-console.log('Target classified: Books to Scrape, first three catalogue pages and their book details.');
+import { createFetcher } from './fetcher.js';
+import { START_URL } from './config.js';
+
+await createFetcher().get(START_URL);
