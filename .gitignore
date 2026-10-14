@@ -1,0 +1,8 @@
+node_modules/
+cache/
+output/
+.env
+.env.*
+*.log
+.npm-cache/
+.DS_Store

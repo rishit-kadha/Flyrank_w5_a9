@@ -1,0 +1,9 @@
+{
+  "name": "flyrank-w5-a9-polite-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A small, polite Books to Scrape pipeline",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node src/index.js", "test": "node --test" }
+}
