@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "demo:failure": "node src/index.js --simulate-failure"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

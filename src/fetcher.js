@@ -16,7 +16,7 @@ export function createFetcher({
   now = Date.now, delayMs = DELAY_MS, timeoutMs = TIMEOUT_MS, log = console.log,
 } = {}) {
   if (delayMs < 500) throw new Error('Request delay must be at least 500 ms');
-  const stats = { pages_fetched: 0, cache_hits: 0, request_attempts: 0 };
+  const stats = { pages_fetched: 0, cache_hits: 0, request_attempts: 0, retries: 0 };
   let nextRequestAt = 0;
 
   async function get(inputUrl) {
@@ -35,21 +35,32 @@ export function createFetcher({
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
-    const wait = nextRequestAt - now();
-    if (wait > 0) await pause(wait);
-    stats.request_attempts++;
     let html;
-    try {
-      const response = await fetchImpl(url, {
-        headers: { 'User-Agent': USER_AGENT }, signal: AbortSignal.timeout(timeoutMs), redirect: 'manual',
-      });
-      if (response.status !== 200) {
-        await response.body?.cancel();
-        throw new HttpError(response.status, url);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const wait = nextRequestAt - now();
+      if (wait > 0) await pause(wait);
+      stats.request_attempts++;
+      try {
+        const response = await fetchImpl(url, {
+          headers: { 'User-Agent': USER_AGENT }, signal: AbortSignal.timeout(timeoutMs), redirect: 'manual',
+        });
+        if (response.status !== 200) {
+          await response.body?.cancel();
+          throw new HttpError(response.status, url);
+        }
+        html = await response.text();
+        break;
+      } catch (error) {
+        const timeout = ['TimeoutError', 'AbortError'].includes(error.name)
+          || ['ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT'].includes(error.cause?.code);
+        const serverError = error.status >= 500 && error.status <= 599;
+        if (attempt !== 0 || (!timeout && !serverError)) throw error;
+        stats.retries++;
+        log('RETRY ' + url + ' reason=' + error.message);
+        await pause(1000);
+      } finally {
+        nextRequestAt = now() + delayMs;
       }
-      html = await response.text();
-    } finally {
-      nextRequestAt = now() + delayMs;
     }
     const fetched_at = new Date(now()).toISOString();
     stats.pages_fetched++;

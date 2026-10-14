@@ -66,6 +66,7 @@ test('duplicate book links across catalogue pages result in one canonical identi
   ]);
   assert.equal(books.length, 2);
   assert.deepEqual(new Set(books.map(book => book.product_url)), new Set([metadata.product_url, other]));
+  assert.equal(books.find(book => book.product_url === metadata.product_url).source_page, metadata.source_page);
 });
 
 test('a malformed book fixture cannot pass the storage schema', async () => {

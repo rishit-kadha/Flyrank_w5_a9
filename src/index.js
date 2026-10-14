@@ -1,34 +1,19 @@
-import { createFetcher } from './fetcher.js';
-import { discover } from './discover.js';
-import { parseBook } from './parse.js';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { ROOT } from './config.js';
-import { normalizeRecord } from './normalize.js';
-import { BookSchema } from './schema.js';
+import { run } from './pipeline.js';
 
-const fetcher = createFetcher();
-const result = await discover(fetcher);
-console.log('catalogue_pages=' + result.catalogue_pages + ' discovered=' + result.discovered + ' unique_urls=' + result.books.length);
-const records = [];
-for (const book of result.books) {
-  const page = await fetcher.get(book.product_url);
-  records.push(parseBook(page.html, { ...book, fetched_at: page.fetched_at }));
-}
-await mkdir(join(ROOT, 'output'), { recursive: true });
-await writeFile(join(ROOT, 'output/raw-books.json'), JSON.stringify(records, null, 2) + '\n');
-console.log(JSON.stringify(records[0], null, 2));
-console.log('detail_pages=' + records.length);
-const valid = new Map();
-const errors = [];
-for (const raw of records) {
+const args = process.argv.slice(2);
+if (args.some(arg => !['--simulate-failure', '--show-raw'].includes(arg))) {
+  console.error('Usage: npm start -- [--simulate-failure] [--show-raw]');
+  process.exitCode = 2;
+} else {
   try {
-    const record = BookSchema.parse(normalizeRecord(raw));
-    valid.set(record.product_url, record);
+    const { report, rawRecords } = await run({ simulateFailure: args.includes('--simulate-failure') });
+    if (args.includes('--show-raw')) console.log(JSON.stringify(rawRecords[0] ?? null, null, 2));
+    console.log(JSON.stringify(report, null, 2));
+    const expectedDemo = report.simulated_failure && report.failed_pages === 1
+      && report.valid_records === 60 && report.invalid_records === 0 && report.run_errors === 0;
+    if (report.status !== 'complete' && !expectedDemo) process.exitCode = 1;
   } catch (error) {
-    errors.push({ product_url: raw.product_url, reason: error.message, record: raw });
+    console.error('Unable to finish/write run report: ' + error.message);
+    process.exitCode = 1;
   }
 }
-await writeFile(join(ROOT, 'output/books.json'), JSON.stringify([...valid.values()], null, 2) + '\n');
-await writeFile(join(ROOT, 'output/errors.json'), JSON.stringify(errors, null, 2) + '\n');
-console.log('valid_records=' + valid.size + ' invalid_records=' + errors.length);
