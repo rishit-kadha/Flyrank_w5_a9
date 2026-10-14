@@ -15,3 +15,22 @@ export function parseCatalogue(html, pageUrl) {
 export function uniqueBooks(books) {
   return [...new Map(books.map(book => [canonicalUrl(book.product_url), book])).values()];
 }
+
+const text = value => value.replace(/\s+/g, ' ').trim();
+export function parseBook(html, { product_url, source_page, fetched_at }) {
+  const $ = load(html);
+  const product = $('article.product_page');
+  const main = product.find('.product_main');
+  const rating = (main.find('.star-rating').attr('class') ?? '').split(/\s+/).find(value => ['One', 'Two', 'Three', 'Four', 'Five'].includes(value)) ?? '';
+  const description = text(product.find('#product_description').next('p').text());
+  return {
+    title: text(main.find('h1').text()),
+    product_url: canonicalUrl(product_url),
+    price_text: text(main.find('.price_color').first().text()),
+    availability_text: text(main.find('.availability').text()),
+    rating_text: rating,
+    description: description || null,
+    source_page: canonicalUrl(source_page),
+    fetched_at,
+  };
+}
