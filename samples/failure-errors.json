@@ -1,0 +1,9 @@
+[
+  {
+    "type": "fetch",
+    "url": "https://books.toscrape.com/catalogue/__local_simulated_missing_book__/index.html",
+    "phase": "detail",
+    "reason": "HTTP 404: local simulation",
+    "simulated": true
+  }
+]

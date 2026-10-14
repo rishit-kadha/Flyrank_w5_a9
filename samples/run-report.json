@@ -1,0 +1,18 @@
+{
+  "started_at": "2026-10-14T10:42:23.424Z",
+  "duration_ms": 213,
+  "pages_fetched": 0,
+  "cache_hits": 63,
+  "request_attempts": 0,
+  "retries": 0,
+  "catalogue_pages": 3,
+  "discovered": 60,
+  "unique_urls": 60,
+  "detail_pages": 60,
+  "valid_records": 60,
+  "invalid_records": 0,
+  "failed_pages": 0,
+  "run_errors": 0,
+  "simulated_failure": false,
+  "status": "complete"
+}
