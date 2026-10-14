@@ -1,4 +1,5 @@
 import { createFetcher } from './fetcher.js';
-import { START_URL } from './config.js';
+import { discover } from './discover.js';
 
-await createFetcher().get(START_URL);
+const result = await discover(createFetcher());
+console.log('catalogue_pages=' + result.catalogue_pages + ' discovered=' + result.discovered + ' unique_urls=' + result.books.length);

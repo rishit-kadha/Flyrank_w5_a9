@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "description": "A small, polite Books to Scrape pipeline",
-  "engines": { "node": ">=22" },
-  "scripts": { "start": "node src/index.js", "test": "node --test" }
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "zod": "^4.6.7"
+  }
 }
